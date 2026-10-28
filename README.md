@@ -1,12 +1,13 @@
 # Cuelet
 
 An Android app that recreates the iPhone's **Shortcuts → Automation** tab, with **no root**. "When this happens,
-do that" on your own phone: when you arrive home, when a charger is connected, when a trusted contact texts a code
-word, and so on.
+do that" on your own phone: when you arrive home, when a charger is connected, at sunset, when an app opens, and so on.
 
 Everything runs and stays on the phone. There is no account, no cloud, and no analytics. Automations can be
 exported and imported as a JSON file; the only things that leave the phone are requests **you** configure (a
-webhook, a Home Assistant call, an upload to your own server).
+webhook, a Home Assistant call, or a message you send).
+
+**[⬇️ Download the latest APK](https://github.com/DogT1/cuelet/releases/latest)**  ·  **[🌐 Website](https://dogt1.github.io/cuelet/)**  ·  Android 14+
 
 ## Features
 
@@ -17,12 +18,13 @@ webhook, a Home Assistant call, an upload to your own server).
   Wear OS workout** (iOS Apple Watch Workout, via the companion app in `wear/`).
 - **Run After Confirmation** or **Run Immediately**, with **Notify When Run**, like iOS.
 - **Actions:** show notification, open app / URL, webhook, Home Assistant service, set volume / ringer / Do Not
-  Disturb, flashlight, brightness, speak text, clipboard, wait, media keys, vibrate, run another automation,
-  **If / Otherwise**, **Choose from Menu**, lock screen, take screenshot, set alarm, start timer, and anti-theft
-  actions (send location / capture photo / record audio to a server you run). Wi-Fi / Bluetooth / mobile data /
-  Airplane toggles use [Shizuku](https://shizuku.rikka.app/) when available, and otherwise open the switch for you
-  to tap.
-- **iOS-style editor**, a **Run Now** button, and an **English / Hebrew** switch with right-to-left layout.
+  Disturb, flashlight, brightness, speak text, clipboard, send SMS, wait, media keys, vibrate, run another
+  automation, **If / Otherwise**, **Choose from Menu**, lock screen, take screenshot, set alarm, start timer, plus
+  **Send Location** (text or share a Maps link to a contact over SMS / WhatsApp / Telegram), **Capture Photo** and
+  **Record Audio** (saved to the phone). Wi-Fi / Bluetooth / mobile data / Airplane toggles use
+  [Shizuku](https://shizuku.rikka.app/) when available, and otherwise open the switch for you to tap.
+- **iOS-style editor**, a **Run Now** button, **Light / Dark / AMOLED** themes, and seven languages — English,
+  Hebrew (right-to-left), Russian, German, French, Spanish and Italian.
 - Clear **"Needs setup"** prompts for the permission each automation needs, requested only when used.
 
 ## No root, and what that costs
@@ -43,7 +45,8 @@ Android Studio, or the command line:
 ./gradlew :app:testDebugUnitTest :wear:testDebugUnitTest
 ```
 
-JDK 17, Android SDK platform 36. Install with `adb install app/build/outputs/apk/debug/app-debug.apk`.
+JDK 17, Android SDK platform 36. Install your build with `adb install app/build/outputs/apk/debug/app-debug.apk`,
+or just grab a ready-made signed APK from the [Releases page](https://github.com/DogT1/cuelet/releases/latest).
 The watch companion is optional and only needed for the Workout trigger; install it on the watch and pair it from
 its own app screen.
 
@@ -72,5 +75,4 @@ hardware/service needs, per-brand background steps, and what's tested — is in 
 
 ## License
 
-MIT — see [LICENSE](LICENSE). The package name reflects the original author; fork and rename freely.
-Contributions welcome.
+MIT — see [LICENSE](LICENSE). Fork and rename freely; contributions welcome.
