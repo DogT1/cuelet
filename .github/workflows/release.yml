@@ -50,14 +50,30 @@ jobs:
       - name: Name the artifact
         run: cp app/build/outputs/apk/release/app-release.apk "cuelet-${{ github.ref_name }}.apk"
 
+      - name: Build release notes from CHANGELOG
+        run: |
+          TAG="${{ github.ref_name }}"
+          # Pull this version's section (everything under "## <tag>" up to the next "## ").
+          awk -v tag="$TAG" '
+            index($0, "## " tag) == 1 { grab=1; next }
+            grab && /^## / { grab=0 }
+            grab { print }
+          ' CHANGELOG.md | sed '/./,$!d' > RELEASE_BODY.md
+          # Trim trailing blank lines; fall back to a minimal body if the section is missing.
+          if [ ! -s RELEASE_BODY.md ]; then
+            printf '**Cuelet %s**\n' "$TAG" > RELEASE_BODY.md
+          fi
+          cat >> RELEASE_BODY.md <<'EOF'
+
+---
+**Install:** download the APK below and open it (allow *"install unknown apps"* if prompted). Requires
+**Android 14+** — see [device support](https://github.com/DogT1/cuelet/blob/main/COMPATIBILITY.md).
+EOF
+          echo "----- release body -----"; cat RELEASE_BODY.md
+
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: "Cuelet ${{ github.ref_name }}"
           files: cuelet-*.apk
-          body: |
-            **Cuelet ${{ github.ref_name }}** — iPhone-style automations for Android, with **no root**.
-
-            Download the APK below and open it (allow *"install unknown apps"* for your browser/files app if
-            prompted). Requires **Android 14+** — see
-            [device support](https://github.com/DogT1/cuelet/blob/main/COMPATIBILITY.md).
+          body_path: RELEASE_BODY.md
