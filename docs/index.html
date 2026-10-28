@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cuelet — iPhone-style automations for Android, no root</title>
+<meta name="description" content="Cuelet recreates the iPhone Shortcuts Automation tab on Android with no root. When this happens, do that — on your own phone. Private, open source, free.">
+<link rel="icon" type="image/png" href="assets/logo.png">
+<meta property="og:title" content="Cuelet">
+<meta property="og:description" content="iPhone-style automations for Android — no root, private, open source.">
+<meta property="og:image" content="assets/logo.png">
+<meta name="theme-color" content="#0A2540">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --cream:#FAF8F1; --cream-2:#F2EEE2; --card:#ffffff;
+    --navy:#0A2540; --ink:#13304f; --muted:#5c6f82; --line:#e7e0cf;
+    --mint:#62F7CD; --teal:#0A7057; --navy-2:#0d2d50;
+    --r:18px; --t:160ms ease;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{margin:0; background:var(--cream); color:var(--ink);
+    font:17px/1.65 "Plus Jakarta Sans",system-ui,-apple-system,Segoe UI,Roboto,sans-serif; -webkit-font-smoothing:antialiased}
+  a{color:var(--teal); text-decoration:none}
+  a:hover{text-decoration:underline}
+  .wrap{max-width:1020px; margin:0 auto; padding:0 22px}
+  h1,h2,h3{color:var(--navy); letter-spacing:-.02em; margin:0}
+  /* top bar */
+  .top{display:flex; align-items:center; justify-content:space-between; padding:18px 22px; max-width:1020px; margin:0 auto}
+  .top .brand{display:flex; align-items:center; gap:10px; font-weight:800; color:var(--navy)}
+  .top .brand img{width:30px; height:30px; border-radius:9px}
+  .top a.gh{color:var(--navy); font-weight:600}
+  /* hero */
+  header{text-align:center; padding:34px 22px 10px}
+  header .lockup{width:150px; height:auto; margin-bottom:8px}
+  h1{font-size:46px; line-height:1.08; margin:14px auto 0; max-width:720px}
+  h1 .hl{color:var(--teal)}
+  .lead{font-size:20px; color:var(--muted); max-width:640px; margin:16px auto 0}
+  .cta{display:flex; gap:14px; justify-content:center; flex-wrap:wrap; margin-top:26px}
+  .btn{display:inline-flex; align-items:center; gap:8px; padding:14px 24px; border-radius:13px; font-weight:700; cursor:pointer; transition:transform var(--t),filter var(--t),background var(--t),border-color var(--t)}
+  .btn:hover{text-decoration:none; transform:translateY(-1px)}
+  .btn.primary{background:var(--mint); color:var(--navy)}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn.ghost{background:transparent; color:var(--navy); border:1.5px solid var(--line)}
+  .btn.ghost:hover{border-color:var(--navy)}
+  .meta{color:var(--muted); font-size:14px; margin-top:16px}
+  .meta a{color:var(--muted); text-decoration:underline}
+  /* phone shots */
+  .shots{display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin:44px auto 10px; max-width:860px}
+  .phone{border:6px solid var(--navy); border-radius:30px; overflow:hidden; background:#000;
+    box-shadow:0 24px 50px rgba(10,37,64,.16)}
+  .phone img{display:block; width:100%; height:auto}
+  .cap{display:none}
+  /* sections */
+  section{padding:40px 0}
+  .band{background:var(--cream-2); border-top:1px solid var(--line); border-bottom:1px solid var(--line)}
+  h2{font-size:30px; text-align:center}
+  .sec-sub{text-align:center; color:var(--muted); max-width:620px; margin:12px auto 0}
+  .grid{display:grid; grid-template-columns:repeat(auto-fit,minmax(260px,1fr)); gap:18px; margin-top:30px}
+  .feat{background:var(--card); border:1px solid var(--line); border-radius:var(--r); padding:22px; transition:transform var(--t),border-color var(--t)}
+  .feat:hover{transform:translateY(-2px); border-color:#d8cfb8}
+  .feat .emoji{font-size:26px; line-height:1}
+  .feat h3{font-size:19px; margin:12px 0 6px}
+  .feat p{margin:0; color:var(--muted); font-size:15.5px}
+  /* split showcase */
+  .split{display:grid; grid-template-columns:1fr 1fr; gap:40px; align-items:center; margin-top:14px}
+  .split .phone{max-width:300px; margin:0 auto}
+  .split ul{list-style:none; padding:0; margin:14px 0 0}
+  .split li{padding:8px 0 8px 30px; position:relative; color:var(--ink)}
+  .split li::before{content:"✓"; position:absolute; left:0; color:var(--teal); font-weight:800}
+  .pill{display:inline-block; background:var(--mint); color:var(--navy); font-weight:700; font-size:13px; padding:5px 12px; border-radius:999px}
+  footer{text-align:center; color:var(--muted); font-size:14.5px; padding:46px 22px 70px}
+  footer .fcta{margin-bottom:22px}
+  :focus-visible{outline:3px solid var(--teal); outline-offset:2px; border-radius:6px}
+  @media (max-width:760px){
+    h1{font-size:34px} .lead{font-size:18px}
+    .shots{grid-template-columns:1fr 1fr; max-width:440px}
+    .split{grid-template-columns:1fr; gap:22px} .split .order-img{order:-1}
+  }
+  @media (max-width:430px){ .shots{grid-template-columns:1fr; max-width:260px} }
+  @media (prefers-reduced-motion:reduce){ *{transition:none!important} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+
+<div class="top">
+  <span class="brand"><img src="assets/logo.png" alt="">Cuelet</span>
+  <a class="gh" href="https://github.com/DogT1/cuelet">GitHub ↗</a>
+</div>
+
+<header>
+  <div class="wrap">
+    <img class="lockup" src="assets/lockup.png" alt="Cuelet logo">
+    <h1>iPhone-style automations.<br>On Android. <span class="hl">No root.</span></h1>
+    <p class="lead">“When this happens, do that” — on your own phone. When you arrive home ⚡ at sunset ⚡ when a
+      charger is plugged in. Everything runs and stays on the device: no account, no cloud, no analytics.</p>
+    <div class="cta">
+      <a class="btn primary" href="https://github.com/DogT1/cuelet/releases">⬇️ Download APK</a>
+      <a class="btn ghost" href="https://github.com/DogT1/cuelet">⭐ View on GitHub</a>
+    </div>
+    <p class="meta">Android 14+ · open source (MIT) · <a href="https://github.com/DogT1/cuelet/blob/main/COMPATIBILITY.md">device support</a></p>
+
+    <div class="shots">
+      <div class="phone"><img src="assets/shots/list.png" alt="Cuelet automations list" loading="lazy"></div>
+      <div class="phone"><img src="assets/shots/triggers.png" alt="Choosing a trigger" loading="lazy"></div>
+      <div class="phone"><img src="assets/shots/actions.png" alt="Choosing an action" loading="lazy"></div>
+    </div>
+  </div>
+</header>
+
+<section class="band">
+  <div class="wrap">
+    <h2>Everything the iPhone does — your way 🪄</h2>
+    <p class="sec-sub">20+ personal-automation triggers mapped to no-root Android equivalents, with a familiar
+      When&nbsp;→&nbsp;Do editor and a deep action set.</p>
+    <div class="grid">
+      <div class="feat"><div class="emoji" aria-hidden="true">⏰</div><h3>20+ triggers</h3>
+        <p>Time &amp; sun, alarm, sleep, arrive / leave, commute, Android Auto, email, message, Wi-Fi, Bluetooth,
+          NFC, app open/close, airplane, Do Not Disturb, battery, charger, sound — and a Wear OS workout.</p></div>
+      <div class="feat"><div class="emoji" aria-hidden="true">🎬</div><h3>Rich actions</h3>
+        <p>Notify, speak, open app / URL, webhook, Home Assistant, volume / ringer / DND, flashlight, brightness,
+          send SMS, send location, capture photo, record audio, lock, screenshot, alarm, timer.</p></div>
+      <div class="feat"><div class="emoji" aria-hidden="true">🔀</div><h3>Real logic</h3>
+        <p><strong>If / Otherwise</strong> branches and <strong>Choose from Menu</strong> prompts, so one automation
+          can make decisions and ask you what to do.</p></div>
+      <div class="feat"><div class="emoji" aria-hidden="true">🛡️</div><h3>No root needed</h3>
+        <p>Only public Android mechanisms — foreground services, a notification listener, a window-only
+          accessibility service, geofences, and optional Shizuku for a few system toggles.</p></div>
+      <div class="feat"><div class="emoji" aria-hidden="true">🔒</div><h3>Private by design</h3>
+        <p>Automations and any tokens you enter live in the app's private storage — never in a file you didn't
+          export, never sent anywhere you didn't set up.</p></div>
+      <div class="feat"><div class="emoji" aria-hidden="true">🌍</div><h3>7 languages &amp; themes</h3>
+        <p>English, Hebrew (right-to-left), Russian, German, French, Spanish, Italian — plus Light, Dark and
+          true-black AMOLED themes.</p></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <div class="wrap">
+    <div class="split">
+      <div class="phone order-img"><img src="assets/shots/editor.png" alt="Automation editor" loading="lazy"></div>
+      <div>
+        <span class="pill">The editor ✍️</span>
+        <h2 style="text-align:left; margin-top:14px">A familiar When → Do flow</h2>
+        <p style="color:var(--muted)">Pick a trigger, add actions, and tune each one. Run after a confirmation or
+          immediately, reorder steps, and hit <strong>Run Now</strong> to test — just like Shortcuts.</p>
+        <ul>
+          <li>Colour-coded triggers and actions, grouped like iOS</li>
+          <li>Per-permission “needs setup” prompts, only when used</li>
+          <li>Export / import your automations as a JSON file</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="band">
+  <div class="wrap">
+    <div class="split">
+      <div>
+        <span class="pill">Yours to control 🎛️</span>
+        <h2 style="text-align:left; margin-top:14px">Private, themeable, multilingual</h2>
+        <p style="color:var(--muted)">A built-in permissions checklist shows exactly what each feature needs and
+          lets you grant it in a tap. No account, no sign-in, nothing phoning home.</p>
+        <ul>
+          <li>One-tap permission checklist</li>
+          <li>Light / Dark / AMOLED, seven languages</li>
+          <li>Free and open source under the MIT License</li>
+        </ul>
+        <div class="cta" style="justify-content:flex-start; margin-top:22px">
+          <a class="btn primary" href="https://github.com/DogT1/cuelet/releases">⬇️ Download APK</a>
+        </div>
+      </div>
+      <div class="phone"><img src="assets/shots/settings.png" alt="Settings: languages, themes, permissions" loading="lazy"></div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="fcta">
+    <a class="btn ghost" href="https://github.com/DogT1/cuelet">⭐ Star it on GitHub</a>
+  </div>
+  <p>Cuelet is free and open source (MIT). No root, no account, no cloud. ❤️<br>
+  Android 14+ · see <a href="https://github.com/DogT1/cuelet/blob/main/COMPATIBILITY.md">device support</a> ·
+  <a href="https://github.com/DogT1/cuelet">source on GitHub</a></p>
+</footer>
+
+</body>
+</html>

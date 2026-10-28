@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_watch_description">Lets the App trigger see which app comes to the front (opened or closed). It does not read what is on screen.</string>
+</resources>
