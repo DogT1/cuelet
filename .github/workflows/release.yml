@@ -63,12 +63,13 @@ jobs:
           if [ ! -s RELEASE_BODY.md ]; then
             printf '**Cuelet %s**\n' "$TAG" > RELEASE_BODY.md
           fi
-          cat >> RELEASE_BODY.md <<'EOF'
-
----
-**Install:** download the APK below and open it (allow *"install unknown apps"* if prompted). Requires
-**Android 14+** — see [device support](https://github.com/DogT1/cuelet/blob/main/COMPATIBILITY.md).
-EOF
+          # (Indented echoes, not a heredoc: lines at column 0 would end this YAML block and break the workflow.)
+          {
+            echo
+            echo '---'
+            echo '**Install:** download the APK below and open it (allow *"install unknown apps"* if prompted). Requires'
+            echo '**Android 14+** — see [device support](https://github.com/DogT1/cuelet/blob/main/COMPATIBILITY.md).'
+          } >> RELEASE_BODY.md
           echo "----- release body -----"; cat RELEASE_BODY.md
 
       - name: Publish GitHub Release
