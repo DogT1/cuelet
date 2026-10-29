@@ -418,6 +418,10 @@ sealed interface Action {
 @Serializable
 data class MenuOption(val label: String, val actions: List<Action> = emptyList())
 
+/** How the phone reaches the internet. */
+@Serializable
+enum class Internet { WIFI, MOBILE, NONE }
+
 /** What an If action can check. */
 @Serializable
 sealed interface Condition {
@@ -428,6 +432,32 @@ sealed interface Condition {
     @Serializable @SerialName("time_between") data class TimeBetween(val window: TimeWindow = TimeWindow(8 * 60, 20 * 60)) : Condition
     @Serializable @SerialName("dnd_on") data class DndOn(val yes: Boolean = true) : Condition
     @Serializable @SerialName("weekday") data class Weekday(val days: Set<Int> = setOf(7, 1, 2, 3, 4)) : Condition
+
+    // Power & device
+    @Serializable @SerialName("battery_saver") data class BatterySaver(val on: Boolean = true) : Condition
+    @Serializable @SerialName("airplane") data class Airplane(val on: Boolean = true) : Condition
+    @Serializable @SerialName("dark_mode") data class DarkMode(val on: Boolean = true) : Condition
+
+    // Connections
+    @Serializable @SerialName("internet") data class InternetVia(val via: Internet = Internet.WIFI) : Condition
+    /** [device] null means any device. Sees audio devices and anything connected over Bluetooth LE. */
+    @Serializable @SerialName("bluetooth_connected") data class BluetoothConnected(val device: BtDevice? = null, val connected: Boolean = true) : Condition
+    @Serializable @SerialName("headphones") data class Headphones(val connected: Boolean = true) : Condition
+
+    // Sound & calls
+    @Serializable @SerialName("ringer") data class Ringer(val mode: RingerMode = RingerMode.NORMAL) : Condition
+    @Serializable @SerialName("volume") data class Volume(val above: Boolean = true, val percent: Int = 50) : Condition
+    @Serializable @SerialName("music_playing") data class MusicPlaying(val yes: Boolean = true) : Condition
+    @Serializable @SerialName("on_call") data class OnCall(val yes: Boolean = true) : Condition
+
+    // Place & screen
+    @Serializable @SerialName("at_place") data class AtPlace(val place: Place? = null, val there: Boolean = true) : Condition
+    @Serializable @SerialName("locked") data class Locked(val yes: Boolean = true) : Condition
+    /** Known only while the App-trigger accessibility service runs. */
+    @Serializable @SerialName("app_in_front") data class AppInFront(val app: AppRef = AppRef("", ""), val yes: Boolean = true) : Condition
+
+    // Chance
+    @Serializable @SerialName("chance") data class Chance(val percent: Int = 50) : Condition
 }
 
 fun Condition.label(): String = when (this) {
@@ -438,6 +468,23 @@ fun Condition.label(): String = when (this) {
     is Condition.TimeBetween -> t("time is %s", window.label())
     is Condition.DndOn -> t(if (yes) "Do Not Disturb is on" else "Do Not Disturb is off")
     is Condition.Weekday -> t("today is %s", daysLabel(days))
+    is Condition.BatterySaver -> t(if (on) "battery saver is on" else "battery saver is off")
+    is Condition.Airplane -> t(if (on) "airplane mode is on" else "airplane mode is off")
+    is Condition.DarkMode -> t(if (on) "dark mode is on" else "dark mode is off")
+    is Condition.InternetVia -> t(when (via) { Internet.WIFI -> "internet is over Wi-Fi"; Internet.MOBILE -> "internet is over mobile data"; Internet.NONE -> "there's no internet" })
+    is Condition.BluetoothConnected -> when (device) {
+        null -> t(if (connected) "a Bluetooth device is connected" else "no Bluetooth device is connected")
+        else -> t(if (connected) "%s is connected over Bluetooth" else "%s isn't connected over Bluetooth", device.name)
+    }
+    is Condition.Headphones -> t(if (connected) "headphones are connected" else "headphones aren't connected")
+    is Condition.Ringer -> t(when (mode) { RingerMode.NORMAL -> "ringer is normal"; RingerMode.VIBRATE -> "ringer is on vibrate"; RingerMode.SILENT -> "ringer is silent" })
+    is Condition.Volume -> t(if (above) "volume is above %d%%" else "volume is below %d%%", percent)
+    is Condition.MusicPlaying -> t(if (yes) "music is playing" else "music isn't playing")
+    is Condition.OnCall -> t(if (yes) "I'm on a call" else "I'm not on a call")
+    is Condition.AtPlace -> t(if (there) "I'm at %s" else "I'm not at %s", place?.name ?: t("a place"))
+    is Condition.Locked -> t(if (yes) "the phone is locked" else "the phone is unlocked")
+    is Condition.AppInFront -> t(if (yes) "%s is in front" else "%s isn't in front", app.name)
+    is Condition.Chance -> t("%d%% of the time", percent)
 }
 
 /** Every action in [actions], including those nested inside If and Choose from Menu. */

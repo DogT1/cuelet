@@ -203,7 +203,7 @@ object ActionRunner {
             Sms.send(ctx, to, body)
         }
         is Action.If -> {
-            val branch = if (Conditions.holds(action.condition, Conditions.read(ctx))) action.then else action.otherwise
+            val branch = if (Conditions.holds(action.condition, Conditions.read(ctx, action.condition))) action.then else action.otherwise
             branch.forEach { run(ctx, it, depth, sender) }
         }
         // The engine handles menus at the top level; nested ones can't wait for a tap.

@@ -140,6 +140,9 @@ class AppWatchService : AccessibilityService() {
 
         fun globalAction(action: Int): Boolean = instance?.performGlobalAction(action) ?: false
 
+        /** Package of the app in front, or null while the service isn't running. */
+        val foregroundApp: String? get() = instance?.tracker?.foreground
+
         fun launchablePackages(ctx: Context): Set<String> {
             val pm = ctx.packageManager
             val launcher = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_LAUNCHER)

@@ -29,6 +29,28 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AirplanemodeActive
+import androidx.compose.material.icons.filled.Apps
+import androidx.compose.material.icons.filled.BatteryAlert
+import androidx.compose.material.icons.filled.BatteryChargingFull
+import androidx.compose.material.icons.filled.BatteryFull
+import androidx.compose.material.icons.filled.BatterySaver
+import androidx.compose.material.icons.filled.Bluetooth
+import androidx.compose.material.icons.filled.CalendarToday
+import androidx.compose.material.icons.filled.Call
+import androidx.compose.material.icons.filled.Casino
+import androidx.compose.material.icons.filled.DarkMode
+import androidx.compose.material.icons.filled.DoNotDisturbOn
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.Headphones
+import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Public
+import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.filled.Vibration
+import androidx.compose.material.icons.filled.VolumeUp
+import androidx.compose.material.icons.filled.Wifi
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.ArrowDownward
@@ -93,6 +115,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.tuvin.pixelautomations.model.Action
 import com.tuvin.pixelautomations.model.AppRef
+import com.tuvin.pixelautomations.model.BtDevice
+import com.tuvin.pixelautomations.model.Internet
 import com.tuvin.pixelautomations.model.Automation
 import com.tuvin.pixelautomations.model.Condition
 import com.tuvin.pixelautomations.model.MediaCommand
@@ -154,16 +178,72 @@ private val catalog: List<Pair<String, List<Pair<String, () -> Action>>>> = list
     ),
 )
 
-/** Conditions offered in If, with a fresh default for each. */
-private val conditionChoices: List<Pair<String, () -> Condition>> = listOf(
-    "Battery above" to { Condition.BatteryAbove() },
-    "Battery below" to { Condition.BatteryBelow() },
-    "Charging" to { Condition.Charging() },
-    "On Wi-Fi network" to { Condition.WifiIs() },
-    "Time between" to { Condition.TimeBetween() },
-    "Do Not Disturb" to { Condition.DndOn() },
-    "Day of week" to { Condition.Weekday() },
+/** Conditions offered in If, grouped like the action catalog, with a fresh default for each. */
+private val conditionCatalog: List<Pair<String, List<Pair<String, () -> Condition>>>> = listOf(
+    "Power & device" to listOf(
+        "Battery above" to { Condition.BatteryAbove() },
+        "Battery below" to { Condition.BatteryBelow() },
+        "Charging" to { Condition.Charging() },
+        "Battery saver" to { Condition.BatterySaver() },
+        "Airplane mode" to { Condition.Airplane() },
+        "Dark mode" to { Condition.DarkMode() },
+    ),
+    "Connections" to listOf(
+        "On Wi-Fi network" to { Condition.WifiIs() },
+        "Internet" to { Condition.InternetVia() },
+        "Bluetooth device" to { Condition.BluetoothConnected() },
+        "Headphones" to { Condition.Headphones() },
+    ),
+    "Sound & calls" to listOf(
+        "Do Not Disturb" to { Condition.DndOn() },
+        "Ringer" to { Condition.Ringer() },
+        "Volume" to { Condition.Volume() },
+        "Music playing" to { Condition.MusicPlaying() },
+        "On a call" to { Condition.OnCall() },
+    ),
+    "Place & screen" to listOf(
+        "At a place" to { Condition.AtPlace() },
+        "Phone locked" to { Condition.Locked() },
+        "App in front" to { Condition.AppInFront() },
+    ),
+    "Time" to listOf(
+        "Time between" to { Condition.TimeBetween() },
+        "Day of week" to { Condition.Weekday() },
+    ),
+    "Chance" to listOf(
+        "Random chance" to { Condition.Chance() },
+    ),
 )
+
+private val conditionChoices: List<Pair<String, () -> Condition>> get() = conditionCatalog.flatMap { it.second }
+
+/** The catalog name of a condition (by type). */
+private fun conditionName(c: Condition): String = conditionChoices.first { it.second()::class == c::class }.first
+
+private fun conditionIcon(name: String): ImageVector = when (name) {
+    "Battery above" -> Icons.Default.BatteryFull
+    "Battery below" -> Icons.Default.BatteryAlert
+    "Charging" -> Icons.Default.BatteryChargingFull
+    "Battery saver" -> Icons.Default.BatterySaver
+    "Airplane mode" -> Icons.Default.AirplanemodeActive
+    "Dark mode" -> Icons.Default.DarkMode
+    "On Wi-Fi network" -> Icons.Default.Wifi
+    "Internet" -> Icons.Default.Public
+    "Bluetooth device" -> Icons.Default.Bluetooth
+    "Headphones" -> Icons.Default.Headphones
+    "Do Not Disturb" -> Icons.Default.DoNotDisturbOn
+    "Ringer" -> Icons.Default.Vibration
+    "Volume" -> Icons.Default.VolumeUp
+    "Music playing" -> Icons.Default.MusicNote
+    "On a call" -> Icons.Default.Call
+    "At a place" -> Icons.Default.Place
+    "Phone locked" -> Icons.Default.Lock
+    "App in front" -> Icons.Default.Apps
+    "Time between" -> Icons.Default.Schedule
+    "Day of week" -> Icons.Default.CalendarToday
+    "Random chance" -> Icons.Default.Casino
+    else -> Icons.Default.CallSplit
+}
 
 /** Whether an action has what it needs to run (used to enable Done). */
 fun Action.isComplete(): Boolean = when (this) {
@@ -176,11 +256,18 @@ fun Action.isComplete(): Boolean = when (this) {
     is Action.CopyToClipboard -> text.isNotEmpty()
     is Action.RunAutomation -> automationId != 0L
     is Action.ForceStop -> app.pkg.isNotBlank()
-    is Action.If -> (condition !is Condition.WifiIs || condition.ssid.isNotBlank()) &&
-        (then + otherwise).all { it.isComplete() }
+    is Action.If -> condition.isComplete() && (then + otherwise).all { it.isComplete() }
     is Action.ChooseFromMenu -> options.size in 1..3 && options.all { o -> o.label.isNotBlank() && o.actions.all { it.isComplete() } }
     is Action.CapturePhoto -> front || back
     is Action.SendLocation -> via == SendVia.SMS || to.isNotBlank()
+    else -> true
+}
+
+/** Whether a condition has what it needs: a network name, a place or an app. */
+fun Condition.isComplete(): Boolean = when (this) {
+    is Condition.WifiIs -> ssid.isNotBlank()
+    is Condition.AtPlace -> place != null
+    is Condition.AppInFront -> app.pkg.isNotBlank()
     else -> true
 }
 
@@ -241,6 +328,13 @@ private fun groupColor(group: String): Color = when (group) {
     "Connections (Shizuku)" -> Color(0xFFEA580C) // orange
     "Location & camera" -> Color(0xFF059669)     // emerald
     "Device" -> Color(0xFF475569)                // slate
+    // Condition groups
+    "Power & device" -> Color(0xFF475569)        // slate
+    "Connections" -> Color(0xFF4F46E5)           // indigo
+    "Sound & calls" -> Color(0xFF7C3AED)         // violet
+    "Place & screen" -> Color(0xFF059669)        // emerald
+    "Time" -> Color(0xFF0891B2)                  // cyan
+    "Chance" -> Color(0xFFDB2777)                // pink
     else -> Color(0xFFD97706)                    // amber — Flow
 }
 
@@ -515,9 +609,7 @@ private fun ActionFields(a: Action, others: List<Automation>, update: (Action) -
         is Action.If -> {
             // If / Then / Otherwise, as distinct colour-railed branches so the logic reads top to bottom.
             Branch("If", Color(0xFFD97706)) {
-                Chips(conditionChoices.map { it.first }, conditionChoices.first { it.second()::class == a.condition::class }.first, { it }) { name ->
-                    update(a.copy(condition = conditionChoices.first { it.first == name }.second()))
-                }
+                ConditionPickerButton(a.condition) { update(a.copy(condition = it)) }
                 ConditionFields(a.condition) { update(a.copy(condition = it)) }
             }
             Branch("Then", Color(0xFF16A34A)) {
@@ -588,6 +680,113 @@ private fun ConditionFields(c: Condition, update: (Condition) -> Unit) {
                     }, label = { Text(dayLetter(d)) })
                 }
             }
+        }
+        is Condition.BatterySaver -> Chips(listOf(true, false), c.on, { if (it) "Is on" else "Is off" }) { update(c.copy(on = it)) }
+        is Condition.Airplane -> Chips(listOf(true, false), c.on, { if (it) "Is on" else "Is off" }) { update(c.copy(on = it)) }
+        is Condition.DarkMode -> Chips(listOf(true, false), c.on, { if (it) "Is on" else "Is off" }) { update(c.copy(on = it)) }
+        is Condition.InternetVia -> Chips(Internet.entries, c.via, { when (it) { Internet.WIFI -> "Wi-Fi"; Internet.MOBILE -> "Mobile data"; Internet.NONE -> "No internet" } }) { update(c.copy(via = it)) }
+        is Condition.BluetoothConnected -> {
+            Chips(listOf(true, false), c.connected, { if (it) "Is connected" else "Isn't connected" }) { update(c.copy(connected = it)) }
+            BluetoothDeviceChoice(c.device) { update(c.copy(device = it)) }
+        }
+        is Condition.Headphones -> Chips(listOf(true, false), c.connected, { if (it) "Are connected" else "Aren't connected" }) { update(c.copy(connected = it)) }
+        is Condition.Ringer -> Chips(RingerMode.entries, c.mode, { it.name.lowercase() }) { update(c.copy(mode = it)) }
+        is Condition.Volume -> {
+            Chips(listOf(true, false), c.above, { if (it) "Above" else "Below" }) { update(c.copy(above = it)) }
+            PercentSlider(c.percent) { update(c.copy(percent = it)) }
+        }
+        is Condition.MusicPlaying -> Chips(listOf(true, false), c.yes, { if (it) "Is playing" else "Isn't playing" }) { update(c.copy(yes = it)) }
+        is Condition.OnCall -> Chips(listOf(true, false), c.yes, { if (it) "On a call" else "Not on a call" }) { update(c.copy(yes = it)) }
+        is Condition.AtPlace -> {
+            Chips(listOf(true, false), c.there, { if (it) "I'm there" else "I'm not there" }) { update(c.copy(there = it)) }
+            PlacePicker("Place", c.place) { update(c.copy(place = it)) }
+        }
+        is Condition.Locked -> Chips(listOf(true, false), c.yes, { if (it) "Is locked" else "Is unlocked" }) { update(c.copy(yes = it)) }
+        is Condition.AppInFront -> {
+            Chips(listOf(true, false), c.yes, { if (it) "Is in front" else "Isn't in front" }) { update(c.copy(yes = it)) }
+            SingleAppPicker(c.app) { update(c.copy(app = it)) }
+            Text(t("Needs the App-trigger accessibility service on."), style = MaterialTheme.typography.bodySmall)
+        }
+        is Condition.Chance -> PercentSlider(c.percent) { update(c.copy(percent = it)) }
+    }
+}
+
+/** The current condition's name; tapping it opens the grouped condition catalog. */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun ConditionPickerButton(current: Condition, onPick: (Condition) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val currentName = conditionName(current)
+    OutlinedButton(onClick = { open = true }) {
+        Icon(conditionIcon(currentName), null)
+        Text(t(currentName), modifier = Modifier.padding(start = 8.dp))
+        Icon(Icons.Default.ExpandMore, null)
+    }
+    if (open) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        ModalBottomSheet(onDismissRequest = { open = false }, sheetState = sheetState) {
+            LazyColumn(
+                Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                contentPadding = PaddingValues(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(2.dp),
+            ) {
+                item(key = "__title") {
+                    Text(
+                        t("Pick a condition"), style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold, modifier = Modifier.padding(start = 8.dp, bottom = 8.dp),
+                    )
+                }
+                conditionCatalog.forEach { (group, rows) ->
+                    val color = groupColor(group)
+                    item(key = "h_$group") {
+                        Text(
+                            t(group).uppercase(), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
+                            color = color, modifier = Modifier.padding(start = 8.dp, top = 16.dp, bottom = 8.dp),
+                        )
+                    }
+                    itemsIndexed(rows, key = { _, r -> "$group:${r.first}" }) { i, (name, make) ->
+                        val shape = RoundedCornerShape(
+                            topStart = if (i == 0) 18.dp else 4.dp, topEnd = if (i == 0) 18.dp else 4.dp,
+                            bottomStart = if (i == rows.lastIndex) 18.dp else 4.dp, bottomEnd = if (i == rows.lastIndex) 18.dp else 4.dp,
+                        )
+                        val selected = name == currentName
+                        Row(
+                            Modifier.fillMaxWidth().clip(shape)
+                                .background(if (selected) color.copy(alpha = 0.18f) else MaterialTheme.colorScheme.surfaceContainer)
+                                .clickable { if (!selected) onPick(make()); open = false }
+                                .padding(horizontal = 12.dp, vertical = 10.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Box(
+                                Modifier.size(40.dp).clip(RoundedCornerShape(13.dp)).background(color),
+                                contentAlignment = Alignment.Center,
+                            ) { Icon(conditionIcon(name), null, tint = Color.White, modifier = Modifier.size(22.dp)) }
+                            Text(
+                                t(name), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                                modifier = Modifier.padding(start = 14.dp),
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** "Any device" or one paired device; needs the Nearby devices permission to list them. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun BluetoothDeviceChoice(device: BtDevice?, onChange: (BtDevice?) -> Unit) {
+    val ctx = LocalContext.current
+    val paired = remember { pairedDevices(ctx) }
+    if (paired == null) {
+        Text(t("Allow Nearby devices to pick a device. Until then, any device counts."), style = MaterialTheme.typography.bodySmall)
+        return
+    }
+    FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        FilterChip(selected = device == null, onClick = { onChange(null) }, label = { Text(t("Any device")) })
+        paired.forEach { d ->
+            FilterChip(selected = device?.address == d.address, onClick = { onChange(d) }, label = { Text(d.name) })
         }
     }
 }

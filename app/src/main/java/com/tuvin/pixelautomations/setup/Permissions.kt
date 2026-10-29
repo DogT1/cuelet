@@ -12,6 +12,7 @@ import com.tuvin.pixelautomations.engine.NotifListener
 import com.tuvin.pixelautomations.actions.ShizukuShell
 import com.tuvin.pixelautomations.model.Action
 import com.tuvin.pixelautomations.model.Automation
+import com.tuvin.pixelautomations.model.Condition
 import com.tuvin.pixelautomations.model.Trigger
 import com.tuvin.pixelautomations.model.VolumeStream
 import com.tuvin.pixelautomations.model.flatten
@@ -61,6 +62,15 @@ object Permissions {
         is Action.RecordAudio -> listOf(RECORD_AUDIO)
         is Action.LockScreen, is Action.TakeScreenshot -> listOf(ACCESSIBILITY)
         is Action.SendSms -> listOf(SEND_SMS)
+        is Action.If -> needed(a.condition)
+        else -> emptyList()
+    }
+
+    fun needed(c: Condition): List<String> = when (c) {
+        // The check runs from the background service.
+        is Condition.AtPlace -> listOf(FINE_LOCATION, BACKGROUND_LOCATION)
+        is Condition.BluetoothConnected -> listOf(NEARBY)
+        is Condition.AppInFront -> listOf(ACCESSIBILITY)
         else -> emptyList()
     }
 

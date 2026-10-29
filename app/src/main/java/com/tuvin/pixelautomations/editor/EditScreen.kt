@@ -660,7 +660,7 @@ fun EditScreen(
 
 /** Paired Bluetooth devices, or null when the Nearby devices permission is missing. */
 @SuppressLint("MissingPermission")
-private fun pairedDevices(ctx: Context): List<BtDevice>? {
+internal fun pairedDevices(ctx: Context): List<BtDevice>? {
     if (!Permissions.granted(ctx, Permissions.NEARBY)) return null
     val adapter = ctx.getSystemService(BluetoothManager::class.java)?.adapter ?: return emptyList()
     return runCatching {
