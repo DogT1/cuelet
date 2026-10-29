@@ -1,5 +1,10 @@
 package com.tuvin.pixelautomations.triggers
 
+import android.content.ComponentName
+import android.content.Context
+import android.content.pm.PackageManager
+import com.tuvin.pixelautomations.engine.NfcTagActivity
+import com.tuvin.pixelautomations.model.Automation
 import com.tuvin.pixelautomations.model.Trigger
 
 /**
@@ -41,4 +46,20 @@ object NfcTrigger {
     /** The URI written to tags with "Write tag", so Android routes them to this app. */
     const val SCHEME = "pixelautomations"
     fun uriFor(tagId: String) = "$SCHEME://tag/$tagId"
+
+    /** True while at least one enabled automation waits for a tag. */
+    fun wanted(all: List<Automation>): Boolean = all.any { it.enabled && it.trigger is Trigger.Nfc }
+
+    /**
+     * Switches [NfcTagActivity] on or off. Its tag filter claims every NFC card the phone sees (a transit or bank
+     * card in the phone case included), so it stays off until an enabled NFC automation needs it.
+     */
+    fun sync(ctx: Context, all: List<Automation>) {
+        val pm = ctx.packageManager
+        val listener = ComponentName(ctx, NfcTagActivity::class.java)
+        val state = if (wanted(all)) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+        if (pm.getComponentEnabledSetting(listener) != state) {
+            pm.setComponentEnabledSetting(listener, state, PackageManager.DONT_KILL_APP)
+        }
+    }
 }

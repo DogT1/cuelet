@@ -60,6 +60,16 @@ class StageFiveTriggersTest {
         assertEquals("pixelautomations://tag/04A2B3FF", NfcTrigger.uriFor("04A2B3FF"))
     }
 
+    /** The tag listener claims every NFC card near the phone, so it must stay off until an NFC automation needs it. */
+    @Test fun nfcListenerWantedOnlyWithAnEnabledNfcAutomation() {
+        val nfc = Automation(id = 1, trigger = Trigger.Nfc("04A2B3FF", "Desk"))
+        val app = Automation(id = 2, trigger = Trigger.App(listOf(netflix), opened = true, closed = false))
+        assertFalse(NfcTrigger.wanted(emptyList()))
+        assertFalse(NfcTrigger.wanted(listOf(app)))
+        assertFalse(NfcTrigger.wanted(listOf(nfc.copy(enabled = false))))
+        assertTrue(NfcTrigger.wanted(listOf(app, nfc)))
+    }
+
     @Test fun jsonAndLabels() {
         val app = Trigger.App(listOf(netflix), opened = true, closed = true)
         val nfc = Trigger.Nfc("04A2B3FF", "Bedside")

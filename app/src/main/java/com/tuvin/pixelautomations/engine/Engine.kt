@@ -12,6 +12,7 @@ import com.tuvin.pixelautomations.model.Automation
 import com.tuvin.pixelautomations.model.RunLogRow
 import com.tuvin.pixelautomations.model.RunMode
 import com.tuvin.pixelautomations.triggers.ArriveLeaveTrigger
+import com.tuvin.pixelautomations.triggers.NfcTrigger
 import com.tuvin.pixelautomations.triggers.TimeOfDayTrigger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -96,12 +97,13 @@ object Engine {
         if (notify) Notifications.ran(ctx, a, result)
     }
 
-    /** Bring alarms and the background service in line with the saved automations. */
+    /** Bring alarms, geofences, the NFC listener and the background service in line with the saved automations. */
     fun sync(ctx: Context) {
         scope.launch {
             val all = ctx.app.repo.all()
             TimeOfDayTrigger.syncAlarms(ctx, all)
             ArriveLeaveTrigger.sync(ctx, all)
+            NfcTrigger.sync(ctx, all)
             AutomationService.update(ctx, needed = all.any { it.enabled })
         }
     }

@@ -119,8 +119,11 @@
                 android:resource="@xml/app_watch_service" />
         </service>
 
+        <!-- Off by default: its tag filter claims every NFC card near the phone. NfcTrigger.sync switches it on
+             only while an enabled NFC automation exists. -->
         <activity
             android:name=".engine.NfcTagActivity"
+            android:enabled="false"
             android:excludeFromRecents="true"
             android:exported="true"
             android:noHistory="true"
